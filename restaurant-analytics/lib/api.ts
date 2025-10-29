@@ -5,6 +5,7 @@ import {
   ChannelPerformance,
   StorePerformance,
   FilterParams,
+  HeatmapData,
 } from '@/types/api'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
@@ -81,4 +82,16 @@ export async function getStoresData(
   })
   if (!res.ok) throw new Error('Failed to fetch stores data')
   return res.json()
+}
+
+export async function getHeatmapData(
+  params: FilterParams = {}
+): Promise<HeatmapData[]> {
+  const queryString = buildQueryString(params)
+  const res = await fetch(`${API_BASE_URL}/api/sales/heatmap?${queryString}`, {
+    cache: 'no-store',
+  })
+  if (!res.ok) throw new Error('Failed to fetch heatmap data')
+  const data = await res.json()
+  return data.data
 }

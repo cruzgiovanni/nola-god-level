@@ -6,11 +6,13 @@ import { KPICard } from '@/components/kpi-card'
 import { RevenueChart } from '@/components/revenue-chart'
 import { TopProductsChart } from '@/components/top-products-chart'
 import { ChannelDistribution } from '@/components/channel-distribution'
+import { SalesHeatmap } from '@/components/sales-heatmap'
 import {
   getOverviewData,
   getTimeSeriesData,
   getProductsData,
   getChannelsData,
+  getHeatmapData,
 } from '@/lib/api'
 import { useFilters } from '@/contexts/filter-context'
 import type {
@@ -18,6 +20,7 @@ import type {
   TimeSeriesData,
   ProductPerformance,
   ChannelPerformance,
+  HeatmapData,
 } from '@/types/api'
 
 export default function DashboardPage() {
@@ -26,6 +29,7 @@ export default function DashboardPage() {
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([])
   const [productsData, setProductsData] = useState<ProductPerformance[]>([])
   const [channelsData, setChannelsData] = useState<ChannelPerformance[]>([])
+  const [heatmapData, setHeatmapData] = useState<HeatmapData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -39,17 +43,20 @@ export default function DashboardPage() {
           channelId,
         }
 
-        const [overview, timeSeries, products, channels] = await Promise.all([
-          getOverviewData(filters),
-          getTimeSeriesData({ ...filters, groupBy: 'day' }),
-          getProductsData({ ...filters, limit: 10 }),
-          getChannelsData(filters),
-        ])
+        const [overview, timeSeries, products, channels, heatmap] =
+          await Promise.all([
+            getOverviewData(filters),
+            getTimeSeriesData({ ...filters, groupBy: 'day' }),
+            getProductsData({ ...filters, limit: 10 }),
+            getChannelsData(filters),
+            getHeatmapData(filters),
+          ])
 
         setOverviewData(overview)
         setTimeSeriesData(timeSeries)
         setProductsData(products)
         setChannelsData(channels)
+        setHeatmapData(heatmap)
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
       } finally {
@@ -111,6 +118,10 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <TopProductsChart data={productsData} />
         <ChannelDistribution data={channelsData} />
+      </div>
+
+      <div className="grid gap-4">
+        <SalesHeatmap data={heatmapData} />
       </div>
     </div>
   )

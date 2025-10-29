@@ -62,3 +62,10 @@ export interface FilterParams {
   storeId?: string
   channelId?: string
 }
+
+export interface HeatmapData {
+  dayOfWeek: number
+  hour: number
+  totalSales: number
+  totalRevenue: number
+}
