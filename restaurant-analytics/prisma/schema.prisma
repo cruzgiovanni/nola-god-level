@@ -1,0 +1,284 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Brand {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  subBrands  SubBrand[]
+  stores     Store[]
+  channels   Channel[]
+  categories Category[]
+
+  @@map("brands")
+}
+
+model SubBrand {
+  id        Int      @id @default(autoincrement())
+  brandId   Int      @map("brand_id")
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  brand      Brand      @relation(fields: [brandId], references: [id])
+  stores     Store[]
+  categories Category[]
+  sales      Sale[]
+
+  @@map("sub_brands")
+}
+
+model Store {
+  id             Int       @id @default(autoincrement())
+  brandId        Int       @map("brand_id")
+  subBrandId     Int?      @map("sub_brand_id")
+  name           String    @db.VarChar(255)
+  city           String?   @db.VarChar(100)
+  state          String?   @db.VarChar(2)
+  district       String?   @db.VarChar(100)
+  addressStreet  String?   @map("address_street") @db.VarChar(200)
+  addressNumber  Int?      @map("address_number")
+  zipcode        String?   @db.VarChar(10)
+  latitude       Decimal?  @db.Decimal(9, 6)
+  longitude      Decimal?  @db.Decimal(9, 6)
+  isActive       Boolean   @default(true) @map("is_active")
+  isOwn          Boolean   @default(false) @map("is_own")
+  isHolding      Boolean   @default(false) @map("is_holding")
+  creationDate   DateTime? @map("creation_date") @db.Date
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  brand    Brand     @relation(fields: [brandId], references: [id])
+  subBrand SubBrand? @relation(fields: [subBrandId], references: [id])
+  sales    Sale[]
+
+  @@map("stores")
+}
+
+model Channel {
+  id          Int      @id @default(autoincrement())
+  brandId     Int      @map("brand_id")
+  name        String   @db.VarChar(100)
+  description String?  @db.VarChar(255)
+  type        String   @db.Char(1) // P=Presencial, D=Delivery
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  brand Brand  @relation(fields: [brandId], references: [id])
+  sales Sale[]
+
+  @@map("channels")
+}
+
+model Category {
+  id         Int       @id @default(autoincrement())
+  brandId    Int       @map("brand_id")
+  subBrandId Int?      @map("sub_brand_id")
+  name       String    @db.VarChar(200)
+  type       String    @default("P") @db.Char(1) // P=Produto, I=Item
+  posUuid    String?   @map("pos_uuid") @db.VarChar(100)
+  deletedAt  DateTime? @map("deleted_at")
+
+  brand    Brand     @relation(fields: [brandId], references: [id])
+  subBrand SubBrand? @relation(fields: [subBrandId], references: [id])
+  products Product[]
+  items    Item[]
+
+  @@map("categories")
+}
+
+model Product {
+  id         Int    @id @default(autoincrement())
+  brandId    Int    @map("brand_id")
+  categoryId Int    @map("category_id")
+  name       String @db.VarChar(200)
+
+  category     Category       @relation(fields: [categoryId], references: [id])
+  productSales ProductSale[]
+
+  @@map("products")
+}
+
+model Item {
+  id         Int    @id @default(autoincrement())
+  brandId    Int    @map("brand_id")
+  categoryId Int    @map("category_id")
+  name       String @db.VarChar(200)
+
+  category           Category             @relation(fields: [categoryId], references: [id])
+  itemProductSales   ItemProductSale[]
+  itemItemProductSales ItemItemProductSale[]
+
+  @@map("items")
+}
+
+model OptionGroup {
+  id      Int    @id @default(autoincrement())
+  brandId Int    @map("brand_id")
+  name    String @db.VarChar(200)
+
+  itemProductSales   ItemProductSale[]
+  itemItemProductSales ItemItemProductSale[]
+
+  @@map("option_groups")
+}
+
+model Customer {
+  id           Int       @id @default(autoincrement())
+  customerName String    @map("customer_name") @db.VarChar(255)
+  email        String?   @db.VarChar(255)
+  phoneNumber  String?   @map("phone_number") @db.VarChar(20)
+  birthDate    DateTime? @map("birth_date") @db.Date
+
+  sales Sale[]
+
+  @@map("customers")
+}
+
+model Sale {
+  id                 Int       @id @default(autoincrement())
+  storeId            Int       @map("store_id")
+  channelId          Int       @map("channel_id")
+  customerId         Int?      @map("customer_id")
+  subBrandId         Int       @map("sub_brand_id")
+  createdAt          DateTime  @map("created_at")
+  customerName       String?   @map("customer_name") @db.VarChar(255)
+  saleStatusDesc     String    @map("sale_status_desc") @db.VarChar(50)
+  totalAmountItems   Decimal   @map("total_amount_items") @db.Decimal(10, 2)
+  totalDiscount      Decimal   @map("total_discount") @db.Decimal(10, 2)
+  totalIncrease      Decimal   @map("total_increase") @db.Decimal(10, 2)
+  deliveryFee        Decimal   @map("delivery_fee") @db.Decimal(10, 2)
+  serviceTaxFee      Decimal   @map("service_tax_fee") @db.Decimal(10, 2)
+  totalAmount        Decimal   @map("total_amount") @db.Decimal(10, 2)
+  valuePaid          Decimal   @map("value_paid") @db.Decimal(10, 2)
+  productionSeconds  Int?      @map("production_seconds")
+  deliverySeconds    Int?      @map("delivery_seconds")
+  peopleQuantity     Int       @map("people_quantity")
+  discountReason     String?   @map("discount_reason") @db.VarChar(200)
+  origin             String?   @db.VarChar(50)
+
+  store          Store            @relation(fields: [storeId], references: [id])
+  channel        Channel          @relation(fields: [channelId], references: [id])
+  customer       Customer?        @relation(fields: [customerId], references: [id])
+  subBrand       SubBrand         @relation(fields: [subBrandId], references: [id])
+  productSales   ProductSale[]
+  payments       Payment[]
+  deliverySale   DeliverySale?
+  deliveryAddress DeliveryAddress?
+
+  @@map("sales")
+}
+
+model ProductSale {
+  id           Int     @id @default(autoincrement())
+  saleId       Int     @map("sale_id")
+  productId    Int     @map("product_id")
+  quantity     Int
+  basePrice    Decimal @map("base_price") @db.Decimal(10, 2)
+  totalPrice   Decimal @map("total_price") @db.Decimal(10, 2)
+  observations String? @db.Text
+
+  sale             Sale              @relation(fields: [saleId], references: [id])
+  product          Product           @relation(fields: [productId], references: [id])
+  itemProductSales ItemProductSale[]
+
+  @@map("product_sales")
+}
+
+model ItemProductSale {
+  id              Int     @id @default(autoincrement())
+  productSaleId   Int     @map("product_sale_id")
+  itemId          Int     @map("item_id")
+  optionGroupId   Int     @map("option_group_id")
+  quantity        Int
+  additionalPrice Decimal @map("additional_price") @db.Decimal(10, 2)
+  price           Decimal @db.Decimal(10, 2)
+  observations    String? @db.Text
+
+  productSale         ProductSale           @relation(fields: [productSaleId], references: [id])
+  item                Item                  @relation(fields: [itemId], references: [id])
+  optionGroup         OptionGroup           @relation(fields: [optionGroupId], references: [id])
+  itemItemProductSales ItemItemProductSale[]
+
+  @@map("item_product_sales")
+}
+
+model ItemItemProductSale {
+  id                Int     @id @default(autoincrement())
+  itemProductSaleId Int     @map("item_product_sale_id")
+  itemId            Int     @map("item_id")
+  optionGroupId     Int     @map("option_group_id")
+  quantity          Int
+  additionalPrice   Decimal @map("additional_price") @db.Decimal(10, 2)
+  price             Decimal @db.Decimal(10, 2)
+
+  itemProductSale ItemProductSale @relation(fields: [itemProductSaleId], references: [id])
+  item            Item            @relation(fields: [itemId], references: [id])
+  optionGroup     OptionGroup     @relation(fields: [optionGroupId], references: [id])
+
+  @@map("item_item_product_sales")
+}
+
+model PaymentType {
+  id          Int    @id @default(autoincrement())
+  description String @db.VarChar(100)
+
+  payments Payment[]
+
+  @@map("payment_types")
+}
+
+model Payment {
+  id            Int     @id @default(autoincrement())
+  saleId        Int     @map("sale_id")
+  paymentTypeId Int     @map("payment_type_id")
+  value         Decimal @db.Decimal(10, 2)
+  isOnline      Boolean @map("is_online")
+
+  sale        Sale        @relation(fields: [saleId], references: [id])
+  paymentType PaymentType @relation(fields: [paymentTypeId], references: [id])
+
+  @@map("payments")
+}
+
+model DeliverySale {
+  id           Int     @id @default(autoincrement())
+  saleId       Int     @unique @map("sale_id")
+  courierName  String? @map("courier_name") @db.VarChar(255)
+  courierPhone String? @map("courier_phone") @db.VarChar(20)
+  courierType  String? @map("courier_type") @db.VarChar(50)
+  deliveryType String  @map("delivery_type") @db.VarChar(50)
+  status       String  @db.VarChar(50)
+  deliveryFee  Decimal @map("delivery_fee") @db.Decimal(10, 2)
+  courierFee   Decimal @map("courier_fee") @db.Decimal(10, 2)
+
+  sale Sale @relation(fields: [saleId], references: [id])
+
+  @@map("delivery_sales")
+}
+
+model DeliveryAddress {
+  id             Int      @id @default(autoincrement())
+  saleId         Int      @unique @map("sale_id")
+  deliverySaleId Int      @map("delivery_sale_id")
+  street         String   @db.VarChar(255)
+  number         String   @db.VarChar(20)
+  complement     String?  @db.VarChar(100)
+  neighborhood   String   @db.VarChar(100)
+  city           String   @db.VarChar(100)
+  state          String   @db.VarChar(2)
+  postalCode     String   @map("postal_code") @db.VarChar(10)
+  latitude       Decimal? @db.Decimal(9, 6)
+  longitude      Decimal? @db.Decimal(9, 6)
+
+  sale Sale @relation(fields: [saleId], references: [id])
+
+  @@map("delivery_addresses")
+}
