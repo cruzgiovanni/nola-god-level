@@ -84,6 +84,24 @@ export async function getStoresData(
   return res.json()
 }
 
+export async function getSalesData(
+  params: FilterParams & { limit?: number; page?: number } = {}
+): Promise<{
+  sales: any[]
+  pagination: { total: number; page: number; limit: number; totalPages: number }
+}> {
+  const { limit = 50, page = 1, ...filterParams } = params
+  const queryString = buildQueryString(filterParams)
+  const res = await fetch(
+    `${API_BASE_URL}/api/sales?${queryString}&limit=${limit}&page=${page}`,
+    {
+      cache: 'no-store',
+    }
+  )
+  if (!res.ok) throw new Error('Failed to fetch sales data')
+  return res.json()
+}
+
 export async function getHeatmapData(
   params: FilterParams = {}
 ): Promise<HeatmapData[]> {

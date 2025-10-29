@@ -47,6 +47,16 @@ export function formatNumber(value: number): string {
   return new Intl.NumberFormat('pt-BR').format(value)
 }
 
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
 export function calculateChange(current: number, previous: number): number {
   if (previous === 0) return 0
   return ((current - previous) / previous) * 100

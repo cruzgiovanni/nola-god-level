@@ -5,10 +5,8 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   ShoppingBag,
-  Store,
   Radio,
   BarChart3,
-  Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -29,19 +27,9 @@ const menuItems = [
     icon: BarChart3,
   },
   {
-    title: 'Lojas',
-    href: '/dashboard/stores',
-    icon: Store,
-  },
-  {
     title: 'Canais',
     href: '/dashboard/channels',
     icon: Radio,
-  },
-  {
-    title: 'Clientes',
-    href: '/dashboard/customers',
-    icon: Users,
   },
 ]
 
